@@ -26,3 +26,21 @@ services:
         sync: false
       - key: RabbitMq__ConnectionString
         sync: false
+
+  - type: web
+    name: prevoyanceinsight-mcp
+    runtime: docker
+    dockerfilePath: src/PrevoyanceInsight.McpServer/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: McpServer__Transport
+        value: Http
+      - key: ConnectionStrings__Postgres
+        sync: false
+      - key: RabbitMq__ConnectionString
+        sync: false
+      - key: RavenDb__CertificateBase64
+        sync: false
+      - key: RavenDb__CertificatePassword
+        sync: false
