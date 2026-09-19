@@ -1,7 +1,17 @@
 @inherits LayoutComponentBase
 
-<div class="page">
-    <main>
+<div class="app-shell">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <span class="brand">PrevoyanceInsight</span>
+            <nav class="nav-links">
+                <NavLink class="nav-link" href="dashboard" Match="NavLinkMatch.All">Dashboard</NavLink>
+                <NavLink class="nav-link" href="comparaison" Match="NavLinkMatch.All">Comparaison</NavLink>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-content">
         @Body
     </main>
 </div>

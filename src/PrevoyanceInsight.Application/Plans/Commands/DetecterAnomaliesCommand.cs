@@ -13,7 +13,19 @@ namespace PrevoyanceInsight.Application.Plans.Commands
     /// </summary>
     public sealed record DetecterAnomaliesCommand(Guid PlanId) : IRequest<RapportAnomalies>;
 
-    public sealed record RapportAnomalies(Guid PlanId, int NombreAssuresControles, int NombreAnomalies, IReadOnlyList<string> Motifs);
+    /// <summary>
+    /// Détail d'une anomalie détectée, avec les champs de l'assuré nécessaires pour
+    /// l'investiguer (l'id seul ne suffit pas à l'actuariat pour identifier le dossier).
+    /// </summary>
+    public sealed record DetailAnomalie(
+        Guid BeneficiaireId,
+        string Motif,
+        int AnneeNaissance,
+        StatutAssure Statut,
+        decimal SalaireAssure,
+        decimal AvoirVieillesse);
+
+    public sealed record RapportAnomalies(Guid PlanId, int NombreAssuresControles, int NombreAnomalies, IReadOnlyList<DetailAnomalie> Anomalies);
 
     public sealed class DetecterAnomaliesCommandHandler(IPlanRepository repository, IEventPublisher eventPublisher)
         : IRequestHandler<DetecterAnomaliesCommand, RapportAnomalies>
@@ -21,19 +33,25 @@ namespace PrevoyanceInsight.Application.Plans.Commands
         public async Task<RapportAnomalies> Handle(DetecterAnomaliesCommand request, CancellationToken ct)
         {
             IReadOnlyList<Beneficiaire> beneficiaires = await repository.ObtenirBeneficiairesAsync(request.PlanId, ct);
-            List<string> motifs = [];
+            List<DetailAnomalie> anomalies = [];
 
             foreach (Beneficiaire beneficiaire in beneficiaires.Where(b => b.EstAnomalie()))
             {
-                string motif = $"Avoir vieillesse nul pour un assuré actif (id {beneficiaire.Id}).";
-                motifs.Add(motif);
+                string motif = "Avoir vieillesse nul pour un assuré actif.";
+                anomalies.Add(new DetailAnomalie(
+                    beneficiaire.Id,
+                    motif,
+                    beneficiaire.AnneeNaissance,
+                    beneficiaire.Statut,
+                    beneficiaire.SalaireAssure,
+                    beneficiaire.AvoirVieillesse));
 
                 await eventPublisher.PublierAsync(
                     new AnomalieDetecteeEvent(request.PlanId, beneficiaire.Id, motif, DateTimeOffset.UtcNow),
                     ct);
             }
 
-            return new RapportAnomalies(request.PlanId, beneficiaires.Count, motifs.Count, motifs);
+            return new RapportAnomalies(request.PlanId, beneficiaires.Count, anomalies.Count, anomalies);
         }
     }
 }

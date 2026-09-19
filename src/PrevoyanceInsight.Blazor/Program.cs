@@ -6,6 +6,8 @@ using PrevoyanceInsight.Blazor.Components;
 using PrevoyanceInsight.Infrastructure.Messaging;
 using PrevoyanceInsight.Infrastructure.Persistence;
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Même Application layer que l'API et le serveur MCP — le dashboard ne fait

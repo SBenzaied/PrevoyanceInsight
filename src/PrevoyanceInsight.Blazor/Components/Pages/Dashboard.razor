@@ -1,0 +1,284 @@
+@page "/"
+@page "/dashboard"
+@using MediatR
+@using PrevoyanceInsight.Application.Common
+@using PrevoyanceInsight.Application.Plans.Commands
+@using PrevoyanceInsight.Application.Plans.Queries
+@using PrevoyanceInsight.Application.Rapports.Commands
+@using PrevoyanceInsight.Blazor.Services
+@using PrevoyanceInsight.Domain.Entities
+@inject ISender Mediator
+@inject IPlanRepository PlanRepository
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Dashboard - PrevoyanceInsight</PageTitle>
+
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <p>Statistiques, contrôle de masse et génération de rapport pour un plan de prévoyance.</p>
+</div>
+
+@if (plans is null)
+{
+    <div class="empty-state">Chargement des plans...</div>
+}
+else
+{
+    <div class="card section-gap">
+        <div class="card-content">
+            <div class="toolbar" style="margin-bottom:0;">
+                <div class="field">
+                    <label for="plan">Plan</label>
+                    <select id="plan" @bind="planId" @bind:after="ChargerStatistiquesAsync">
+                        <option value="">Sélectionner un plan...</option>
+                        @foreach (PlanPrevoyance plan in plans)
+                        {
+                            <option value="@plan.Id">@plan.Nom</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (erreur is not null)
+    {
+        <div class="alert alert-destructive">@erreur</div>
+    }
+
+    @if (isLoadingStats)
+    {
+        <div class="empty-state">Chargement des statistiques...</div>
+    }
+    else if (statistiques is not null)
+    {
+        <div class="card section-gap">
+            <div class="card-header">
+                <div class="card-title">@statistiques.NomPlan</div>
+                <div class="card-description">
+                    Taux de couverture
+                    @if (statistiques.TauxCouverture < 0.80m)
+                    {
+                        <span class="badge badge-destructive">Sous surveillance</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-success">Conforme</span>
+                    }
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Actifs</div>
+                        <div class="stat-value">@statistiques.NombreActifs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pensionnés</div>
+                        <div class="stat-value">@statistiques.NombrePensionnes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Invalides</div>
+                        <div class="stat-value">@statistiques.NombreInvalides</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Âge moyen (actifs)</div>
+                        <div class="stat-value">@statistiques.AgeMoyenActifs.ToString("N1")</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avoir vieillesse moyen</div>
+                        <div class="stat-value">@statistiques.AvoirVieillesseMoyen.ToString("N0")</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Taux de couverture</div>
+                        <div class="stat-value">@statistiques.TauxCouverture.ToString("P1")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card section-gap">
+            <div class="card-header">
+                <div class="card-title">Contrôle de masse</div>
+                <div class="card-description">Détecte les anomalies de saisie (ex. avoir vieillesse nul pour un actif).</div>
+            </div>
+            <div class="card-content">
+                @if (anomalies is not null)
+                {
+                    @if (anomalies.NombreAnomalies == 0)
+                    {
+                        <div class="alert alert-success" style="margin-bottom:1rem;">
+                            Aucune anomalie détectée sur @anomalies.NombreAssuresControles assuré(s) contrôlé(s).
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-destructive" style="margin-bottom:1rem;">
+                            @anomalies.NombreAnomalies anomalie(s) détectée(s) sur @anomalies.NombreAssuresControles assuré(s) contrôlé(s).
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Assuré</th>
+                                    <th>Statut</th>
+                                    <th>Année de naissance</th>
+                                    <th>Salaire assuré</th>
+                                    <th>Avoir vieillesse</th>
+                                    <th>Motif</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (DetailAnomalie anomalie in anomalies.Anomalies)
+                                {
+                                    <tr>
+                                        <td><code>@anomalie.BeneficiaireId.ToString()[..8]</code></td>
+                                        <td>@anomalie.Statut</td>
+                                        <td>@anomalie.AnneeNaissance</td>
+                                        <td>@anomalie.SalaireAssure.ToString("N0")</td>
+                                        <td>@anomalie.AvoirVieillesse.ToString("N0")</td>
+                                        <td>@anomalie.Motif</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                }
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-outline" @onclick="DetecterAnomaliesAsync" disabled="@isDetectingAnomalies">
+                    @(isDetectingAnomalies ? "Contrôle en cours..." : "Lancer le contrôle")
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Générer un rapport</div>
+                <div class="card-description">Produit un rapport de synthèse pour l'actuariat dans le format choisi.</div>
+            </div>
+            <div class="card-content">
+                <div class="toolbar" style="margin-bottom:@(rapport is null ? "0" : "1rem");">
+                    <div class="field">
+                        <label for="format">Format</label>
+                        <select id="format" @bind="formatRapport">
+                            <option value="@FormatRapport.Pdf">PDF</option>
+                            <option value="@FormatRapport.Csv">CSV</option>
+                            <option value="@FormatRapport.Json">JSON</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" @onclick="GenererRapportAsync" disabled="@isGeneratingRapport">
+                        @(isGeneratingRapport ? "Génération..." : "Générer")
+                    </button>
+                </div>
+
+                @if (rapport is not null)
+                {
+                    <div class="alert alert-success">
+                        Rapport @rapport.Format téléchargé (généré le @rapport.GenereLe.ToLocalTime().ToString("g") pour « @rapport.Statistiques.NomPlan »).
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private IReadOnlyList<PlanPrevoyance>? plans;
+    private string planId = string.Empty;
+    private string? erreur;
+
+    private StatistiquesPlan? statistiques;
+    private bool isLoadingStats;
+
+    private RapportAnomalies? anomalies;
+    private bool isDetectingAnomalies;
+
+    private FormatRapport formatRapport = FormatRapport.Pdf;
+    private RapportGenere? rapport;
+    private bool isGeneratingRapport;
+
+    protected override async Task OnInitializedAsync()
+    {
+        plans = await PlanRepository.ListerTousAsync();
+    }
+
+    private async Task ChargerStatistiquesAsync()
+    {
+        statistiques = null;
+        anomalies = null;
+        rapport = null;
+        erreur = null;
+
+        if (string.IsNullOrEmpty(planId))
+        {
+            return;
+        }
+
+        isLoadingStats = true;
+        try
+        {
+            statistiques = await Mediator.Send(new ObtenirStatistiquesPlanQuery(Guid.Parse(planId)));
+        }
+        catch (Exception ex)
+        {
+            erreur = $"Impossible de charger les statistiques : {ex.Message}";
+        }
+        finally
+        {
+            isLoadingStats = false;
+        }
+    }
+
+    private async Task DetecterAnomaliesAsync()
+    {
+        if (string.IsNullOrEmpty(planId))
+        {
+            return;
+        }
+
+        isDetectingAnomalies = true;
+        erreur = null;
+        try
+        {
+            anomalies = await Mediator.Send(new DetecterAnomaliesCommand(Guid.Parse(planId)));
+        }
+        catch (Exception ex)
+        {
+            erreur = $"Le contrôle de masse a échoué : {ex.Message}";
+        }
+        finally
+        {
+            isDetectingAnomalies = false;
+        }
+    }
+
+    private async Task GenererRapportAsync()
+    {
+        if (string.IsNullOrEmpty(planId))
+        {
+            return;
+        }
+
+        isGeneratingRapport = true;
+        erreur = null;
+        try
+        {
+            rapport = await Mediator.Send(new GenererRapportCommand(Guid.Parse(planId), formatRapport));
+
+            RapportFichierGenerator.FichierRapport fichier = RapportFichierGenerator.Generer(rapport);
+            await JsRuntime.InvokeVoidAsync(
+                "downloadFileFromBytes",
+                fichier.NomFichier,
+                fichier.ContentType,
+                Convert.ToBase64String(fichier.Contenu));
+        }
+        catch (Exception ex)
+        {
+            erreur = $"La génération du rapport a échoué : {ex.Message}";
+        }
+        finally
+        {
+            isGeneratingRapport = false;
+        }
+    }
+}

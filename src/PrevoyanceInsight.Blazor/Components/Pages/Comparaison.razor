@@ -1,4 +1,3 @@
-@page "/"
 @page "/comparaison"
 @using MediatR
 @using PrevoyanceInsight.Application.Common
@@ -10,46 +9,72 @@
 
 <PageTitle>Comparaison des plans de prévoyance</PageTitle>
 
-<h1>Comparaison de plans de prévoyance</h1>
+<div class="page-header">
+    <h1>Comparaison de plans</h1>
+    <p>Comparez deux plans de prévoyance sur leurs taux de couverture, de cotisation et technique.</p>
+</div>
 
 @if (plans is null)
 {
-    <p><em>Chargement...</em></p>
+    <div class="empty-state">Chargement des plans...</div>
 }
 else
 {
-    <div class="selecteurs">
-        <select @bind="planIdA">
-            <option value="">Plan A</option>
-            @foreach (PlanPrevoyance plan in plans)
-            {
-                <option value="@plan.Id">@plan.Nom</option>
-            }
-        </select>
+    <div class="card section-gap">
+        <div class="card-content">
+            <div class="toolbar" style="margin-bottom:0;">
+                <div class="field">
+                    <label for="planA">Plan A</label>
+                    <select id="planA" @bind="planIdA">
+                        <option value="">Sélectionner...</option>
+                        @foreach (PlanPrevoyance plan in plans)
+                        {
+                            <option value="@plan.Id">@plan.Nom</option>
+                        }
+                    </select>
+                </div>
 
-        <select @bind="planIdB">
-            <option value="">Plan B</option>
-            @foreach (PlanPrevoyance plan in plans)
-            {
-                <option value="@plan.Id">@plan.Nom</option>
-            }
-        </select>
+                <div class="field">
+                    <label for="planB">Plan B</label>
+                    <select id="planB" @bind="planIdB">
+                        <option value="">Sélectionner...</option>
+                        @foreach (PlanPrevoyance plan in plans)
+                        {
+                            <option value="@plan.Id">@plan.Nom</option>
+                        }
+                    </select>
+                </div>
 
-        <button @onclick="ComparerAsync" disabled="@(string.IsNullOrEmpty(planIdA) || string.IsNullOrEmpty(planIdB))">
-            Comparer
-        </button>
+                <button class="btn btn-primary" @onclick="ComparerAsync" disabled="@(string.IsNullOrEmpty(planIdA) || string.IsNullOrEmpty(planIdB))">
+                    Comparer
+                </button>
+            </div>
+        </div>
     </div>
 
     @if (comparaison is not null)
     {
-        <div class="resultat">
-            <h2>@comparaison.NomPlanA vs @comparaison.NomPlanB</h2>
-            <ul>
-                <li>Écart taux de couverture : @comparaison.EcartTauxCouverture.ToString("P1")</li>
-                <li>Écart taux de cotisation total : @comparaison.EcartTauxCotisationTotal.ToString("P1")</li>
-                <li>Écart taux technique : @comparaison.EcartTauxTechnique.ToString("P1")</li>
-            </ul>
-            <p class="synthese">@comparaison.Synthese</p>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">@comparaison.NomPlanA vs @comparaison.NomPlanB</div>
+            </div>
+            <div class="card-content">
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Écart taux de couverture</div>
+                        <div class="stat-value">@comparaison.EcartTauxCouverture.ToString("P1")</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Écart taux de cotisation total</div>
+                        <div class="stat-value">@comparaison.EcartTauxCotisationTotal.ToString("P1")</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Écart taux technique</div>
+                        <div class="stat-value">@comparaison.EcartTauxTechnique.ToString("P1")</div>
+                    </div>
+                </div>
+                <p class="muted">@comparaison.Synthese</p>
+            </div>
         </div>
     }
 }
