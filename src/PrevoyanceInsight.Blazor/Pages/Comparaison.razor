@@ -1,0 +1,71 @@
+@page "/comparaison"
+@using MediatR
+@using PrevoyanceInsight.Application.Common
+@using PrevoyanceInsight.Application.Plans.Queries
+@using PrevoyanceInsight.Domain.Entities
+@using PrevoyanceInsight.Domain.ValueObjects
+@inject ISender Mediator
+@inject IPlanRepository PlanRepository
+
+<PageTitle>Comparaison des plans de prévoyance</PageTitle>
+
+<h1>Comparaison de plans de prévoyance</h1>
+
+@if (plans is null)
+{
+    <p><em>Chargement...</em></p>
+}
+else
+{
+    <div class="selecteurs">
+        <select @bind="planIdA">
+            <option value="">Plan A</option>
+            @foreach (PlanPrevoyance plan in plans)
+            {
+                <option value="@plan.Id">@plan.Nom</option>
+            }
+        </select>
+
+        <select @bind="planIdB">
+            <option value="">Plan B</option>
+            @foreach (PlanPrevoyance plan in plans)
+            {
+                <option value="@plan.Id">@plan.Nom</option>
+            }
+        </select>
+
+        <button @onclick="ComparerAsync" disabled="@(string.IsNullOrEmpty(planIdA) || string.IsNullOrEmpty(planIdB))">
+            Comparer
+        </button>
+    </div>
+
+    @if (comparaison is not null)
+    {
+        <div class="resultat">
+            <h2>@comparaison.NomPlanA vs @comparaison.NomPlanB</h2>
+            <ul>
+                <li>Écart taux de couverture : @comparaison.EcartTauxCouverture.ToString("P1")</li>
+                <li>Écart taux de cotisation total : @comparaison.EcartTauxCotisationTotal.ToString("P1")</li>
+                <li>Écart taux technique : @comparaison.EcartTauxTechnique.ToString("P1")</li>
+            </ul>
+            <p class="synthese">@comparaison.Synthese</p>
+        </div>
+    }
+}
+
+@code {
+    private IReadOnlyList<Domain.Entities.PlanPrevoyance>? plans;
+    private string planIdA = string.Empty;
+    private string planIdB = string.Empty;
+    private ComparaisonPlans? comparaison;
+
+    protected async Task OnInitializedAsync()
+    {
+        plans = await PlanRepository.ListerTousAsync();
+    }
+
+    private async Task ComparerAsync()
+    {
+        comparaison = await Mediator.Send(new ComparerPlansQuery(Guid.Parse(planIdA), Guid.Parse(planIdB)));
+    }
+}

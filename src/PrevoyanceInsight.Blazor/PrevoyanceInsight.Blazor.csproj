@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>PrevoyanceInsight.Blazor</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PrevoyanceInsight.Application\PrevoyanceInsight.Application.csproj" />
+    <ProjectReference Include="..\PrevoyanceInsight.Infrastructure\PrevoyanceInsight.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

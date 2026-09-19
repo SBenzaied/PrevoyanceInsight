@@ -1,0 +1,65 @@
+version: "3.9"
+
+# Reproduit en local l'architecture décrite dans docs/ARCHITECTURE.md :
+# PostgreSQL (données structurées, alimentées par CDC en production),
+# RavenDB (documents), RabbitMQ (événements), puis l'API, le serveur MCP
+# et le dashboard Blazor.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: prevoyance
+      POSTGRES_USER: prevoyance
+      POSTGRES_PASSWORD: prevoyance
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  ravendb:
+    image: ravendb/ravendb:6.2-ubuntu-latest
+    environment:
+      RAVEN_Setup_Mode: "None"
+      RAVEN_License_Eula_Accepted: "true"
+      RAVEN_Security_UnsecuredAccessAllowed: "PrivateNetwork"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ravendb-data:/opt/RavenDB/Server/RavenData
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"   # broker
+      - "15672:15672" # UI de management
+
+  api:
+    build:
+      context: .
+      dockerfile: src/PrevoyanceInsight.Api/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "5000:8080"
+    environment:
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=prevoyance;Username=prevoyance;Password=prevoyance"
+      RabbitMq__Host: "rabbitmq"
+
+  mcp-server:
+    build:
+      context: .
+      dockerfile: src/PrevoyanceInsight.McpServer/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=prevoyance;Username=prevoyance;Password=prevoyance"
+      RabbitMq__Host: "rabbitmq"
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres-data:
+  ravendb-data:
