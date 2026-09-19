@@ -83,19 +83,11 @@ et l'agent orchestre l'appel d'outil correspondant.
 
 ## Brancher le serveur MCP
 
-Le serveur communique en stdio. Pour le connecter à Claude Desktop, ajouter dans sa
-configuration :
-
-```json
-{
-  "mcpServers": {
-    "prevoyance-insight": {
-      "command": "dotnet",
-      "args": ["run", "--project", "src/PrevoyanceInsight.McpServer"]
-    }
-  }
-}
-```
+Le serveur supporte deux transports : stdio en local (`dotnet run`), ou HTTP une fois
+déployé (`McpServer__Transport=Http`, voir `render.yaml`) — un serveur déjà en ligne
+tourne sur `https://prevoyanceinsight-mcp.onrender.com`. Pour la configuration détaillée
+côté Claude (Claude.ai, Claude Desktop, Claude Code) et des prompts de test, voir
+[`docs/CONNEXION_MCP.md`](CONNEXION_MCP.md).
 
 ## Ce qui est délibérément hors périmètre du démonstrateur
 

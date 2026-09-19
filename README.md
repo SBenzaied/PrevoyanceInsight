@@ -5,7 +5,21 @@ Démonstrateur technique préparé pour l'entretien "Développeur Full Stack .NE
 une BI pour l'actuariat, et des outils d'IA pilotables par prompting pour produire des
 rapports, comparer des plans de prévoyance et détecter des anomalies de masse.
 
-➡️ **Commencez par [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** pour le contexte et
+## Accès direct (déployé, aucune installation)
+
+| | |
+|---|---|
+| 🖥️ **Dashboard** | https://prevoyanceinsight-blazor.onrender.com/ |
+| 🤖 **Serveur MCP** | https://prevoyanceinsight-mcp.onrender.com |
+
+Le dashboard s'ouvre directement dans un navigateur. Pour brancher le serveur MCP sur
+Claude (Claude.ai, Claude Desktop ou Claude Code) et le tester avec des prompts prêts à
+l'emploi, voir **[`docs/CONNEXION_MCP.md`](docs/CONNEXION_MCP.md)**.
+
+Les deux services sont sur le plan gratuit de Render : ils se mettent en veille après
+inactivité — la première requête après un moment peut prendre 30 à 60 secondes.
+
+➡️ **Ensuite, [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** pour le contexte et
 les diagrammes, puis [`docs/TALKING_POINTS.md`](docs/TALKING_POINTS.md) pour la
 préparation de l'entretien.
 
@@ -49,7 +63,7 @@ dotnet test tests/PrevoyanceInsight.Tests
 
 ## État du projet
 
-Ce dépôt a été rédigé comme scaffold structurant : l'environnement de rédaction n'avait
-pas d'accès réseau pour restaurer les paquets NuGet, donc le code n'a pas été compilé
-ni exécuté ici. Avant la démo, prévoir un `dotnet restore` + `dotnet build` en local
-pour corriger d'éventuels ajustements mineurs de versions de paquets.
+Le projet build, tourne et a été testé de bout en bout (API, dashboard Blazor, serveur
+MCP en stdio et en HTTP). Le dashboard et le serveur MCP sont déployés en continu sur
+Render (voir `render.yaml` et [Accès direct](#accès-direct-déployé-aucune-installation)
+ci-dessus).
