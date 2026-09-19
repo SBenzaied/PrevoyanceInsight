@@ -45,7 +45,7 @@ services:
       - "5000:8080"
     environment:
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=prevoyance;Username=prevoyance;Password=prevoyance"
-      RabbitMq__Host: "rabbitmq"
+      RabbitMq__ConnectionString: "rabbitmq"
 
   mcp-server:
     build:
@@ -56,9 +56,22 @@ services:
       - rabbitmq
     environment:
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=prevoyance;Username=prevoyance;Password=prevoyance"
-      RabbitMq__Host: "rabbitmq"
+      RabbitMq__ConnectionString: "rabbitmq"
     stdin_open: true
     tty: true
+
+  blazor:
+    build:
+      context: .
+      dockerfile: src/PrevoyanceInsight.Blazor/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "5001:8080"
+    environment:
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=prevoyance;Username=prevoyance;Password=prevoyance"
+      RabbitMq__ConnectionString: "rabbitmq"
 
 volumes:
   postgres-data:

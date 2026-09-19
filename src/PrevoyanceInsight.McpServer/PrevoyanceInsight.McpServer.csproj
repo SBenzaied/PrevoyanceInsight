@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>PrevoyanceInsight.McpServer</RootNamespace>
     <OutputType>Exe</OutputType>
+    <UserSecretsId>prevoyanceinsight-mcpserver-a3f4e8d1-2c9b-4e6a-8f7d-5b1c3a9e2d64</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

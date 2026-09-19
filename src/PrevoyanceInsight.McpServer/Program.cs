@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PrevoyanceInsight.Application.Common;
 using PrevoyanceInsight.Application.Plans.Queries;
+using PrevoyanceInsight.Infrastructure.Documents;
 using PrevoyanceInsight.Infrastructure.Messaging;
 using PrevoyanceInsight.Infrastructure.Persistence;
 
@@ -16,7 +17,13 @@ builder.Services.AddDbContext<PrevoyanceDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
-builder.Services.AjouterMessagerie(builder.Configuration["RabbitMq:Host"] ?? "localhost");
+builder.Services.AjouterMessagerie(builder.Configuration["RabbitMq:ConnectionString"] ?? "localhost");
+builder.Services.AjouterDocuments(
+    builder.Configuration.GetSection("RavenDb:Urls").Get<string[]>() ?? ["http://localhost:8080"],
+    builder.Configuration["RavenDb:Database"] ?? "prevoyance-reglements",
+    builder.Configuration["RavenDb:CertificatePath"],
+    builder.Configuration["RavenDb:CertificateBase64"],
+    builder.Configuration["RavenDb:CertificatePassword"]);
 
 builder.Services
     .AddMcpServer()

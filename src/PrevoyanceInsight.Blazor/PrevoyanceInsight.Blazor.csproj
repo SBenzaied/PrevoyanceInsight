@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>PrevoyanceInsight.Blazor</RootNamespace>
+    <UserSecretsId>prevoyanceinsight-api-c9e7a4f0-6b3d-4b7e-9d2a-1f6e2c8b5a3d</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

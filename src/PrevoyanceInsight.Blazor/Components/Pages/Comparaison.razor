@@ -1,3 +1,4 @@
+@page "/"
 @page "/comparaison"
 @using MediatR
 @using PrevoyanceInsight.Application.Common
@@ -59,7 +60,7 @@ else
     private string planIdB = string.Empty;
     private ComparaisonPlans? comparaison;
 
-    protected async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         plans = await PlanRepository.ListerTousAsync();
     }

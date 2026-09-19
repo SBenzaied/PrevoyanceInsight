@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: prevoyanceinsight-api
+    runtime: docker
+    dockerfilePath: src/PrevoyanceInsight.Api/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: ConnectionStrings__Postgres
+        sync: false
+      - key: RabbitMq__ConnectionString
+        sync: false
+      - key: RavenDb__CertificateBase64
+        sync: false
+      - key: RavenDb__CertificatePassword
+        sync: false
+
+  - type: web
+    name: prevoyanceinsight-blazor
+    runtime: docker
+    dockerfilePath: src/PrevoyanceInsight.Blazor/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: ConnectionStrings__Postgres
+        sync: false
+      - key: RabbitMq__ConnectionString
+        sync: false
