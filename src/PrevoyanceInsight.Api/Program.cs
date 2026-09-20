@@ -19,7 +19,9 @@ builder.Services.AddDbContext<PrevoyanceDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
-builder.Services.AjouterMessagerie(builder.Configuration["RabbitMq:ConnectionString"] ?? "localhost");
+builder.Services.AjouterMessagerie(
+    builder.Configuration["RabbitMq:ConnectionString"] ?? "localhost",
+    x => x.AddConsumer<AnomalieDetecteeConsumer>());
 builder.Services.AjouterDocuments(
     builder.Configuration.GetSection("RavenDb:Urls").Get<string[]>() ?? ["http://localhost:8080"],
     builder.Configuration["RavenDb:Database"] ?? "prevoyance-reglements",

@@ -26,10 +26,20 @@ namespace PrevoyanceInsight.Infrastructure.Messaging
     /// </summary>
     public static class MessagingServiceCollectionExtensions
     {
-        public static IServiceCollection AjouterMessagerie(this IServiceCollection services, string rabbitMqConnectionString)
+        /// <summary>
+        /// <paramref name="configurerConsommateurs"/> est optionnel : seul le service qui doit
+        /// effectivement réagir aux événements (ici l'API) enregistre ses consumers, les autres
+        /// (Blazor, MCP) restent uniquement producteurs et ne créent aucune queue.
+        /// </summary>
+        public static IServiceCollection AjouterMessagerie(
+            this IServiceCollection services,
+            string rabbitMqConnectionString,
+            Action<IBusRegistrationConfigurator>? configurerConsommateurs = null)
         {
             services.AddMassTransit(x =>
             {
+                configurerConsommateurs?.Invoke(x);
+
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     // CloudAMQP (et tout broker managé) expose une URI amqp(s)://user:pass@host/vhost
